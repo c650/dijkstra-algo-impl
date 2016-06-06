@@ -1,79 +1,81 @@
-#include <cmath>
-#include <cstdio>
 #include <vector>
 #include <iostream>
 #include <algorithm>
 #include <limits>
 #include <utility>
-using namespace std;
 
-int dijkstra(vector< vector< pair<int,int> > >& matrix, const int& start, const int& end, vector<int>& distances);
+/* typedef to make more clear */
+typedef std::vector< std::vector< std::pair<int,int> > > adjacency_list;
+
+int dijkstra(const adjacency_list& adj_list, const int& start, const int& end, std::vector<int>& distances);
 
 int main() {
-    int t,n,m; cin >> t;
+    int n,m; std::cin >> n >> m;
     
-    for (int i = 0; i < t; i++) {
-        cin >> n >> m;
-        
-        // adj-list using vector of size n holding a vector for
-        // each vertex.
-        vector< vector< pair<int,int> > > matrix(n);
-        
-        int f,s,w, // first, second, weight
-        j; // iter
-        for (j = 0; j < m; j++) {
-            cin >> f >> s >> w;      
-            matrix[f-1].push_back( make_pair(s-1,w) );
-            matrix[s-1].push_back( make_pair(f-1,w) );
-        }
-        
-        int start; cin >> start;
-        start--; // zero-base the starting point
-        vector<int> distances(matrix.size(), numeric_limits<int>::max());
-        for (j = 0; j < n; j++) {
-            if (j != start)
-                cout << dijkstra(matrix, start, j, distances) << " ";
-        }
-        cout << endl;
+    /*
+        adj-list using vector of size n holding a vector for
+        each vertex.
+    */
+    adjacency_list adj_list(n);
+    
+    int f,s,w; /* first, second, weight */
+    for (int i = 0; i < m; i++) {
+        std::cin >> f >> s >> w;
+
+        /* graph is undirected */
+        adj_list[f-1].push_back( std::make_pair(s-1,w) );
+        adj_list[s-1].push_back( std::make_pair(f-1,w) );
     }
+    
+    int start; std::cin >> start;
+    start--; /* zero-base the starting point */
+
+    std::vector<int> distances(adj_list.size(), std::numeric_limits<int>::max());
+    for (int i = 0; i < n; i++) {
+        if (i != start)
+            std::cout << dijkstra(adj_list, start, i, distances) << " ";
+    }
+    std::cout << std::endl;
     
     return 0;
 }
 
-int dijkstra(vector< vector< pair<int,int> > >& matrix, const int& start, const int& end, vector<int>& distances) {
+int dijkstra(const adjacency_list& adj_list, const int& start, const int& end, std::vector<int>& distances) {
     
-    vector<int> nodes; // another vec of ints
+    /* another vec of ints to keep track of traversable nodes*/
+    std::vector<int> nodes;
     
     distances[start] = 0;
     
-    for (int i = 0, n = matrix.size(); i < n; i++)
+    for (int i = 0, n = adj_list.size(); i < n; i++)
         nodes.push_back(i);
     
     nodes.push_back(start);
     
     auto comp = [&](int l, int r) {return distances[l] > distances[r];};
-    make_heap(nodes.begin(), nodes.end(), comp);
+    std::make_heap(nodes.begin(), nodes.end(), comp);
     
     while(!nodes.empty()) {
-        pop_heap(nodes.begin(), nodes.end(), comp);
+        std::pop_heap(nodes.begin(), nodes.end(), comp);
         int smallest = nodes.back();
         nodes.pop_back();
  
-        if (smallest == end) break; // returns at bottom anyway
+        if (smallest == end)
+            break; /* returns at bottom anyway */
  
-        if (distances[smallest] == numeric_limits<int>::max())
-            return -1;
+        if (distances[smallest] == std::numeric_limits<int>::max())
+            break;
  
-        for(int i = 0, n = matrix[smallest].size(); i < n; i++) {
-            int tmp = distances[smallest] + matrix[smallest][i].second;
+        for(int i = 0, n = adj_list[smallest].size(); i < n; i++) {
+            int tmp = distances[smallest] + adj_list[smallest][i].second;
            
-            if (tmp < distances[matrix[smallest][i].first] && tmp > 0) {
-                distances[matrix[smallest][i].first] = tmp;
-                make_heap(nodes.begin(), nodes.end(), comp);
+            if (tmp < distances[adj_list[smallest][i].first] && tmp > 0) {
+                distances[adj_list[smallest][i].first] = tmp;
+                std::make_heap(nodes.begin(), nodes.end(), comp);
             }
         }
     }
-    if (distances[end] == numeric_limits<int>::max())
+    if (distances[end] == std::numeric_limits<int>::max())
         return -1;
     else
         return distances[end];
